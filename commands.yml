@@ -80,6 +80,12 @@ Variables
 ######################################
 #Different version of the applicaiton to different hosts is possible with vars
 ansible -m setup #gives the facts and this can be referenced in any yml file
+
 #chap 8 for templates; specific values in default dir and the j2 file in templates folder
 hash_behaviour: merge  ---#ansible.conf file
 group_vars folder #define variables for a group of servers chap8
+
+#register variables. Can use when clause and perform actions based on the results
+register: results
+- name: print registered
+  debug: var=result #prints the output
