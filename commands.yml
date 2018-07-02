@@ -1,0 +1,85 @@
+######################################
+General Ansible Commands
+######################################
+ansible --version  #this shows which cfg file is active
+ansible-config view #shows which config is currently active and its details
+ansible-config dump #shows local as well as global configs -- what ever is in yellow/orange is custom set by us in the configs
+ansible-config list #shows explanation for the values that was gotten using the dump option
+
+ansible all -m ping #Uses "all" module and connects to all the hosts. Ungrouped is another group of hosts which includes all those that done
+                    #belong to any other group in the inventory -- for a ping returns pong -- to validate if you are able to connect to inventory
+                    #using ansible
+ansible '*36*' -m ping #wildcard, host,groups,subscripts, exclsion, intersection,regex - evernote
+ansible python:slack -m ping
+ansible 'dev:!slack' -m ping #Eclude slack host
+ansible all -m ping -f 1 #Runs on one host at a time and not in parallel
+ansible-playbook slack.yml --limit #this option can be used to limit playbook exec to a certain hosts or groups. When you use limit,
+        #the module (all, * etc) should have matching hosts. else it fails. limit only works on alreday successfully retrieved results.
+        #If there is not result from the module then --limit throws error
+
+ansible-console -b #repl editor logs into the host and enables us to run modules directly. It creates the connetion  to all the hosts when we run the module.
+
+ansible-playbook systems.yml --syntax-check; echo $? #Checks the syntax of the playbook, make sure $?=0, generally the error would be in the previous line.
+ansible-playbook slack.yml --list-hosts | --list-tasks #where would the playbook apply the tasks. you can add tags at tasks level
+ansible-playbook slack.yml --check # check does dry run
+ansible-playbook slack.yml --step #Allows step by step execution of tasks
+ansible-playbook slack.yml --start-at-task="<task name>"
+ansbile-console slack #To Valdiate the changes that were applied on the hosts under slack label. you need not ssh to those hosts and Check
+ansible-playbook slack.yml --syntax-check
+
+
+#Running some Raw commands on a host -- winRm in case of windows, ssh incase of linux
+ansible all -f 1 -a "free" # -a option just runs raw commands
+ansible all -f 1 -a -b "free" # -b option is become option, allows to sudo
+ansible-doc --list|wc -l #lists the number of modules
+ansible-doc --list |grep slack #shows specific module
+
+#Using modules
+ansible app -m yum -s -a "name=ntp state=installed" #-m yum --> module name,state --> kv pair arguments
+                                                    #These modules can be put inside a play book and it gives a json output.
+ansible-doc -s yum #shows the details about the user yum module. Add -s option to get short description
+ansible slack -m user -a "name=kshivanansible comment=testingansible group=hadoop shell=/bin/bash home=/u/users/testingansible" #creates user
+ansible slack -m user -a "name=kshivanansible comment=testingansible group=hadoop state=absent shell=/bin/bash remove=yes" #drops the user
+ansible slack -m command -a "free|grep -i swap" #allows you to run commands but wont allow extra properties on output. So, we use shell as below- evernote
+ansible slack -m shell -a "free|grep -i swap"
+ansible slack -vvvv -m raw -a "whoami"  #does direct ssh, python module subsystem is not used. THIS DOES NOT NEED PYTHON ON THE RESULTNG NODE.
+ansible slack -vvvv -m command -a "whoami" #uses command module
+ansible slack -vvvv -m shell -a "whoami" #-vvvv is extra verbose. you can less than 4 v also.
+ansible slack -m command -a "which python"
+ansible slack -m command -a "mkdir /tmp/dir1 creates=/tmp/dir1" #creates enforces idempotence, wihtout creates it wont enfore idempotence
+ansible-galaxy init --offline --init-path roles/ apache   #Creates a scaffolding for a new role. roles/ is the path where the role scaffold gets created. oofline does not query galaxy
+
+######################################
+Inside playbook
+######################################
+gather_facts: no #Disabls gathering facts and speeds up the process. use this only if you dont use facts or variables
+with_items #iterator for installing multiple items. - chap7, roles/php/tasks/main.yml
+inventory_hostname # contains the name of the current node being worked on…. (as in, what it is defined in your hosts file as) so if you want to skip a task for a single node
+stdout_lines #contains the output with new line char.
+stdout # contains the output in string format
+#Parse the stdout #https://www.safaribooksonline.com/library/view/ansible-up-and/9781491915318/ch04.html
+
+######################################
+Roles
+######################################
+roles/apache/tasks/service.yml # Contains the actuall installation Commands
+roles/apache/tasks/install.yml # Contains what we do with severice -- like start or stop.
+roles/apache/tasks/config.yml #Contains the logic for copying files and operations specific to the insalled service.
+roles/apache/handlers/main.yml #will have the notification based tasks , that comes from config.yml. The exact "name" given here would be used in config.xml to notify
+                              #If there is notify anywhere, look into the handlers folder to see what it is notifying for.
+roles/apache/files #Will contain all the files that we want to copy over to the hosts - like krb5.conf. You need to copy that file into this folder to propagate.
+roles/apache/tasks/main.yml #contains import_tasks
+roles/apache/meta/main.yml #Contains dependencies, dont have to list the tasks separately in the main playbook using import. Its good to set dependencies for common tasks.
+
+#Nested Roles -- Good practice to create system role for all the common tasks
+#system.yml will be on the home directory. system role will be created as a noraml role, but its dependency will be added to specific role.
+
+
+######################################
+Variables
+######################################
+#Different version of the applicaiton to different hosts is possible with vars
+ansible -m setup #gives the facts and this can be referenced in any yml file
+#chap 8 for templates; specific values in default dir and the j2 file in templates folder
+hash_behaviour: merge  ---#ansible.conf file
+group_vars folder #define variables for a group of servers chap8
