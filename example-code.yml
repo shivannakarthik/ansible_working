@@ -1,0 +1,101 @@
+#SLACK NOTIFICATION
+#Code that needed change in /usr/lib/python2.6/site-packages/ansible/module_utils/urls.py
+#https support not offered
+#try:
+#            if https_proxy:
+#                proxy_parts = generic_urlparse(urlparse(https_proxy))
+#                port = proxy_parts.get('port') or 443
+#                s = socket.create_connection((proxy_parts.get('hostname'), port))
+#                if proxy_parts.get('scheme') in ('https' or 'http'): #amended here to include httpd
+#                    s.sendall(to_bytes(self.CONNECT_COMMAND % (self.hostname, self.port), errors='surrogate_or_strict'))
+---
+  - name: Slack Notification
+    gather_facts: no
+    environment:
+      https_proxy: https://<proxyurl>:<port>
+    hosts: slack
+    #connection: local
+    #sample task included
+    tasks:
+      - name: Checking uptime
+        shell: /sbin/ifconfig etho
+        register: command_output
+      - debug:
+          var: command_output
+
+      - name: Create Directory
+        file:
+          path: /tmp/kshivan/ansible/test
+          #state: absent
+          state: directory
+          recurse: yes
+
+      - name: Send notification message via Slack
+        slack:
+          token: xxxxxx/xxxxxxx/xxxxxxxxxxxxxxxxxxxxx
+          channel: "#channelnamehere"
+          msg: "Testing slack notification"
+
+##-----------------------------------------------------------------------------------------------
+#ssh trust playbook
+---
+  - name: Setting up trust
+    gather_facts: false
+    tasks:
+      - name: Set authorized_key
+        authorized_key:
+          user: root
+          state: present
+          key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+
+#role for ssh trust
+---
+  - name: Setting up trust
+    hosts: host
+    gather_facts: false
+    vars:
+      username: kshivan
+    tasks:
+    - name:
+      shell: >
+        getent passwd "{{ username }}" | cut -d: -f6
+      changed_when: false
+      register: user_home
+
+    - name: debug output
+      debug: var=user_home.stdout
+
+    - name: Set authorized_key
+      authorized_key:
+        user: "{{ username }}"
+        state: present
+        key: "{{ lookup('file', '{{ user_home.stdout }}/.ssh/id_rsa.pub') }}"
+
+##-----------------------------------------------------------------------------------------------
+# To back up files in a given directory
+- hosts: all
+  tasks:
+  - name: caputure output and loop
+    shell: "find *.txt"
+    args:
+      chdir: "/tmp/kshivan/ansible/test"
+    register: with_output
+
+  - shell: "cp {{ item }} {{item}}_bkp"
+    with_items:
+      - "{{ with_output.stdout_lines }}"
+
+##-----------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------------------------
