@@ -88,4 +88,4 @@ group_vars folder #define variables for a group of servers chap8
 #register variables. Can use when clause and perform actions based on the results
 register: results
 - name: print registered
-  debug: var=result #prints the output
+  debug: var=result #prints the outputs 
