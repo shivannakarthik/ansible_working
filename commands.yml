@@ -1,5 +1,5 @@
 ######################################
-General Ansible Commands
+Beginning of General Ansible Commands
 ######################################
 ansible --version  #this shows which cfg file is active
 ansible-config view #shows which config is currently active and its details
