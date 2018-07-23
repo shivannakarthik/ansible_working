@@ -168,7 +168,22 @@ path_to_hosts_file
   - debug:
       var: command_output1.stdout_lines
 ##-----------------------------------------------------------------------------------------------
+AFAIK, there is no method to set persistant custom environmental variable using ansible.
+However, you can set the variables in .profile and use fetch that value or set it on command line and then run the play book.
+$ export SYMFONY_ENV=development
+---
+  - name: Setting Up ssh trust for root user
+    hosts: local
+    gather_facts: false
+    #environment:
+    #  SYMFONY_ENV: development
+    tasks:
+      - name: date
+        command: date
+      - debug:
+          msg: "{{ lookup('env','SYMFONY_ENV') }} is an environment variable"
 ##-----------------------------------------------------------------------------------------------
+
 ##-----------------------------------------------------------------------------------------------
 ##-----------------------------------------------------------------------------------------------
 ##-----------------------------------------------------------------------------------------------
