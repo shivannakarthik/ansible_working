@@ -86,13 +86,104 @@
       - "{{ with_output.stdout_lines }}"
 
 ##-----------------------------------------------------------------------------------------------
+---
+  - name: Trial PplayBook
+    hosts: onehost
+    gather_facts: false
+    tasks:
+      - name: execute scripts
+        script: /u/users/svchdpdb/scripts/ambaritrust/pushkeytab_auto.sh Ibanezjrg2@ /tmp/hosts.txt
+##-----------------------------------------------------------------------------------------------
+---
+  - name: Trial PplayBook
+    hosts: onehost
+    gather_facts: false
+    pre_tasks:
+      - name: Checking firewall status and sending slack notification
+        command: uptime
+        register: command_output
+      - debug:
+          var: command_output.stdout_lines
+    roles:
+    tasks:
 
 ##-----------------------------------------------------------------------------------------------
+#To connect to remote host and run command as root. playbook would be run as an adhoc user
+---
+  - name: Trial PplayBook
+    hosts: onehost
+    gather_facts: false
+    tasks:
+      - name: Run a command as nobody
+        command: who
+        become: yes
+        become_method: dzdo
+        become_user: root
+        register: command_output
+      - debug:
+          var: command_output.stdout_lines
+      - script: /u/users/svchdpdb/scripts/ambaritrust/pushkeytab_auto.sh Ibanezjrg2@ /tmp/hosts.txt
+        register: command_output1
+      - debug:
+          var: command_output1.stdout_lines
+
 ##-----------------------------------------------------------------------------------------------
+#To set up root trust -- playbook
+#To connect to remote host and run command as root. playbook would be run as an adhoc user
+---
+  - name: Trial PplayBook
+    hosts: onehost
+    gather_facts: false
+    tasks:
+      - name: Run a command as nobody
+        command: who
+        become: yes
+        become_method: dzdo
+        become_user: root
+        register: command_output
+      - debug:
+          var: command_output.stdout_lines
+      - script: /u/users/svchdpdb/scripts/ambaritrust/pushkeytab_auto.sh Ibanezjrg2@ /tmp/hosts.txt
+      #- script: /u/users/svchdpdb/scripts/ambaritrust/pushkeytab_auto.sh "{{ your_ad_password}}" "{{ path_to_hosts_file}}"
+        register: command_output1
+      - debug:
+          var: command_output1.stdout_lines
+
+ansible-playbook ssh_test.yml --extra-vars "your_ad_password=Ibanezjrg2@ path_to_hosts_file=/tmp/hosts.txt" --ask-pass
+your_ad_password
+path_to_hosts_file
+
 ##-----------------------------------------------------------------------------------------------
+#To set up root trust -- role -- goes into the roles folder tasks/main.yml
+---
+  - name: ssh root trust
+    command: who
+    become: yes
+    become_method: dzdo
+    register: command_output
+  - debug:
+      var: command_output.stdout_lines
+  - script: /u/users/svchdpdb/scripts/ambaritrust/pushkeytab_auto.sh  "{{ your_ad_password}}" "{{ path_to_hosts_file}}" "{{ username }}"
+    register: command_output1
+  - debug:
+      var: command_output1.stdout_lines
 ##-----------------------------------------------------------------------------------------------
+AFAIK, there is no method to set persistant custom environmental variable using ansible.
+However, you can set the variables in .profile and use fetch that value or set it on command line and then run the play book.
+$ export SYMFONY_ENV=development
+---
+  - name: Setting Up ssh trust for root user
+    hosts: local
+    gather_facts: false
+    #environment:
+    #  SYMFONY_ENV: development
+    tasks:
+      - name: date
+        command: date
+      - debug:
+          msg: "{{ lookup('env','SYMFONY_ENV') }} is an environment variable"
 ##-----------------------------------------------------------------------------------------------
-##-----------------------------------------------------------------------------------------------
+
 ##-----------------------------------------------------------------------------------------------
 ##-----------------------------------------------------------------------------------------------
 ##-----------------------------------------------------------------------------------------------

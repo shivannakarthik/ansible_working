@@ -49,6 +49,23 @@ ansible slack -m command -a "which python"
 ansible slack -m command -a "mkdir /tmp/dir1 creates=/tmp/dir1" #creates enforces idempotence, wihtout creates it wont enfore idempotence
 ansible-galaxy init --offline --init-path roles/ apache   #Creates a scaffolding for a new role. roles/ is the path where the role scaffold gets created. oofline does not query galaxy
 
+#like facter in puppet, we have setup in ansible. see subset module
+ansible all/localhost -m setup -a "filter=ansible_os_family/ansible_*_mb" --tree /tmp/facts  #gives the facts and this can be referenced in any yml file, puts inside the facts file in json format, we can use in yml foramt aslo.
+ansible all/localhost -m setup -a "filter=ansible_*_mb #regular exp can be used too.
+ansible localhost -m setup -a "gather_subset=!all,!any,network,virtual"
+
+#ssh related
+ssh-copy-id user@hostname
+--connection=local --ask-pass flag on the command line
+ssh -C -vvv -o ControlMaster=auto -o ControlPersist=60s -o 'IdentityFile="/home/ssrey/.ssh/id.rsa"' -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/home/ssrey/.ansible/cp/ansible-ssh-%h-%p-%r 192.168.1.174
+ansible_ssh_user=kshivan  #in the host inventory file
+
+ansible-vault create topsecret.yml
+your_ad_password
+path_to_hosts_file
+username
+cat /tmp/id_rsa.pub >> /root/.ssh/authorized_keys
+
 ######################################
 Inside playbook
 ######################################
@@ -79,7 +96,6 @@ roles/apache/meta/main.yml #Contains dependencies, dont have to list the tasks s
 Variables
 ######################################
 #Different version of the applicaiton to different hosts is possible with vars
-ansible all -m setup "filter=ansible_os_family" #gives the facts and this can be referenced in any yml file
 
 #chap 8 for templates; specific values in default dir and the j2 file in templates folder
 hash_behaviour: merge  ---#ansible.conf file
@@ -88,4 +104,4 @@ group_vars folder #define variables for a group of servers chap8
 #register variables. Can use when clause and perform actions based on the results
 register: results
 - name: print registered
-  debug: var=result #prints the outputs
+  debug: var=result #prints the output
